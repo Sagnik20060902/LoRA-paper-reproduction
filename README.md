@@ -65,6 +65,38 @@ patterns instead.
 This suggests LoRA may be particularly well-suited for low-data 
 fine-tuning regimes, beyond just its efficiency benefits.
 
+## Rank Ablation 
+
+To find the optimal rank for this setup, I ran experiments across 
+r = 2, 4, 5, 6, 8, 16, 32, 64 (2 epochs, fixed setup throughout).
+
+| Rank (r) | Training Loss | Training Time |
+|----------|--------------|---------------|
+| 2        | 1.18         | 99.5s         |
+| 4        | 1.16         | 100.5s        |
+| 5        | 1.16         | 101.2s        |
+| 6        | 1.15         | 101.6s        |
+| 8        | **1.13**     | 111.6s        |
+| 16       | 1.256        | 112.1s        |
+| 32       | 1.566        | 114.1s        |
+| 64       | 2.63         | 115.3s        |
+
+![Rank Ablation Curve](rank_ablation.png)
+
+Loss decreases from r=2 to r=8, then increases sharply beyond that.
+At low ranks, the adapter's expressive capacity is too constrained to 
+capture the task signal effectively. At high ranks, the increased 
+parameter count destabilizes optimization under a fixed learning rate 
+— the same lr that works well for 0.11% trainable parameters becomes 
+too aggressive when rank grows significantly.
+
+A practical observation: r=6 achieves nearly the same loss as r=8 
+(1.15 vs 1.13) at roughly the same speed as r=4 (~101s vs ~111s), 
+making it the most efficient choice for this specific setup. The 
+paper's recommendation of small r values (1–8) is empirically 
+confirmed here, with r=8 as the optimal point before diminishing returns.
+
+
 ## What's next
 
 - Experiment with different rank values (r = 1, 2, 8, 16) and measure perplexity vs. parameter count tradeoff
