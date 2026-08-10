@@ -107,3 +107,6 @@ confirmed here, with r=8 as the optimal point before diminishing returns.
 
 Hu et al., "LoRA: Low-Rank Adaptation of Large Language Models", 2021.
 https://arxiv.org/abs/2106.09685
+
+
+note: all runs used a fixed lr=1e-3 without rank-based scaling — high-rank degradation may partly reflect lr mismatch rather than rank alone
