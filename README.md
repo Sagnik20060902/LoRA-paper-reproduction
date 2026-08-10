@@ -37,7 +37,7 @@ LoRA achieves perplexity within 6% of full fine-tuning while training only
 0.11% of parameters in roughly half the time. Both methods massively outperform
 the vanilla baseline (4257 → ~3.8 range).
 
-## Additional Finding: LoRA as Implicit Regularization
+## Finding: LoRA as Implicit Regularization
 
 Running extended experiments with r=2 while increasing epochs revealed 
 a result — LoRA not only matches full fine-tuning efficiency, 
@@ -65,7 +65,7 @@ patterns instead.
 This suggests LoRA may be particularly well-suited for low-data 
 fine-tuning regimes, beyond just its efficiency benefits.
 
-## Rank Ablation 
+## Finding: Rank Ablation 
 
 To find the optimal rank for this setup, I ran experiments across 
 r = 2, 4, 5, 6, 8, 16, 32, 64 (2 epochs, fixed setup throughout).
@@ -96,6 +96,26 @@ making it the most efficient choice for this specific setup. The
 paper's recommendation of small r values (1–8) is empirically 
 confirmed here, with r=8 as the optimal point before diminishing returns.
 
+### Limitations & Next Steps
+
+All rank ablation experiments used a fixed `lr=1e-3` without 
+rank-based learning rate scaling. The LoRA paper recommends scaling 
+the adapter's output by `lora_alpha / r` — effectively reducing the 
+adapter's contribution as rank grows, which compensates for the 
+increased parameter count. Without this scaling, the fixed lr becomes 
+increasingly too large at higher ranks, likely destabilizing 
+optimization and artificially inflating loss at r=16+.
+
+The observed sweet spot at r=8 should therefore be interpreted 
+carefully — it reflects the optimal rank under a fixed lr=1e-3 
+specifically, not necessarily the globally optimal rank. A proper 
+ablation would scale lr proportionally at each rank 
+(e.g. `lr = base_lr * (alpha / r)`).
+
+**Planned follow-up:** re-run r=16, 32, 64 with rank-scaled lr to 
+isolate whether high-rank degradation is a true capacity issue or 
+purely a learning rate artifact.
+
 
 ## What's next
 
@@ -108,5 +128,3 @@ confirmed here, with r=8 as the optimal point before diminishing returns.
 Hu et al., "LoRA: Low-Rank Adaptation of Large Language Models", 2021.
 https://arxiv.org/abs/2106.09685
 
-
-note: all runs used a fixed lr=1e-3 without rank-based scaling — high-rank degradation may partly reflect lr mismatch rather than rank alone
