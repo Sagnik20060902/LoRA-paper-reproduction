@@ -116,6 +116,33 @@ ablation would scale lr proportionally at each rank
 isolate whether high-rank degradation is a true capacity issue or 
 purely a learning rate artifact.
 
+**Follow-up experiment:** re-ran r=4 with lora_alpha=16 (scaling=4) 
+at lr=1e-3 — observed significantly higher loss, consistent with 
+gradient amplification hypothesis. Training stabilized when either 
+scaling was removed or lr was reduced to ~3e-4, confirming the 
+paper's alpha scaling assumes a lower base lr than used in our 
+initial experiments.
+
+## Learning Rate and Alpha Scaling Interaction
+
+The paper fixes lora_alpha and tunes lr — treating scaling as a 
+fixed architectural choice rather than a hyperparameter. In practice, 
+with lr=1e-3 and lora_alpha=16 (scaling=4 at r=4), training showed 
+significantly higher loss compared to running without scaling at the 
+same lr.
+
+This suggests the paper's alpha scaling assumes a lower base lr 
+(the paper uses ~3e-4, not 1e-3). The scaling factor effectively 
+amplifies the adapter's gradient signal — at lr=1e-3, a scaling 
+of 4x produces gradient steps equivalent to lr=4e-3, which is 
+too aggressive for stable convergence on a small dataset.
+
+Practical finding: for small datasets with lr=1e-3, either:
+- Remove scaling (alpha=r, scaling=1), or  
+- Keep scaling but reduce lr to ~3e-4
+
+The no-scaling baseline with lr=1e-3 produced the most stable 
+training in this setup.
 
 ## What's next
 
